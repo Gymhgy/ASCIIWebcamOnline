@@ -1,0 +1,8 @@
+#render {
+    font: 6px Consolas;
+    background-color: black;
+    color: white;
+}
+.hide{
+    display: none;
+}
