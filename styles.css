@@ -2,7 +2,39 @@
     font: 6px Consolas;
     background-color: black;
     color: white;
+    text-align: center;
+    display: inline-block
 }
 .hide{
     display: none;
+}
+
+#container {
+    display: flex;
+    column-gap: 10px;
+}
+
+#processor {
+    display: flex;
+    flex-direction: column;
+    row-gap: 10px;
+}
+
+.optionGroup {
+    border: 2px solid gray;
+    border-radius: 5px;
+    height:fit-content;
+    padding: 20px;
+}
+
+.option {
+    font-family: sans-serif;
+    padding: 3px;
+}
+
+.enabled {
+    background-color: green;
+}
+
+.arg {
 }

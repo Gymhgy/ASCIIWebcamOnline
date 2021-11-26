@@ -32,8 +32,15 @@ let asciiWebcam = {
 
             this.canvas.width = width;
             this.canvas.height = height;
+            this.testCanvas = document.createElement("canvas");
+            this.testCanvas.width = this.width;
+            this.testCanvas.height = this.height;
+            this.video.parentElement.appendChild(this.testCanvas);
+
         });
         this.video.addEventListener("play", () => this.timerCallback(), false);
+
+
     },
 
     computeFrame: function() {
@@ -41,6 +48,31 @@ let asciiWebcam = {
 
         this.ctx.drawImage(this.video, 0, 0, this.width, this.height);
         let frame = this.ctx.getImageData(0, 0, this.width, this.height);
+
+
+
+        //Do the preprocessing
+        preprocessLoop:
+        for(const opt of document.getElementsByClassName("option")) {
+            if(opt.classList.contains("enabled")) {
+                let group = opt.dataset.group;
+                let name = opt.dataset.name;
+                let func = processing[group][name];
+
+                let args = [];
+
+                for(const input of opt.getElementsByTagName("input")) {
+                    if(input.value === "") continue preprocessLoop;
+                    let a = Number(input.value);
+                    if(isNaN(a)) continue preprocessLoop;
+                    args.push(a);
+                }
+
+                func.process(frame.data, this.width, this.height, ...args);
+            }
+        }
+
+        this.testCanvas.getContext("2d").putImageData(frame, 0, 0);
 
         const fontSize = 6;
         const height = fontSize;
@@ -77,11 +109,91 @@ let asciiWebcam = {
     }
 };
 
+class ProcessFunction {
+    constructor(name, arity, process) {
+        this.name = name;
+        this.arity = arity;
+        this.process = process;
+    }
+}
+
+//Assumes image is still in rgba
+//All in place
 let processing = {
+    load: function() {
+        this.processor = document.getElementById("processor");
+        const categories = ["histogram", "other"];
+        for(const category of categories) {
+            const div = document.createElement("div");
+            const funcGroup = processing[category];
+            div.className = "optionGroup";
 
+            Object.keys(funcGroup).forEach(func => {
+                const option = document.createElement("div");
+                option.classList.add("option");
+                option.addEventListener("click", () => {
+                    option.classList.toggle("enabled");
+                });
+                const label = document.createElement("label");
+                label.innerText = funcGroup[func].name;
+
+                option.dataset.name = func;
+                option.dataset.group = category;
+
+                option.appendChild(label);
+                for(let i = 0; i < funcGroup[func].arity; i++) {
+                    const arg = document.createElement("input");
+                    arg.type = "number";
+                    arg.classList.add("arg");
+                    arg.maxLength = 5;
+                    arg.min = "0";
+                    arg.max = "1000";
+                    option.appendChild(arg);
+                }
+                div.appendChild(option);
+            });
+
+            this.processor.appendChild(div);
+        }
+    },
+
+    histogram: {
+        histEqual: new ProcessFunction("Histogram Equalization", 0, function(img, width, height) {
+            const total = width * height;
+            //Fill with zeros
+            let freq = new Array(256); for (let i=0; i<256; i++) freq[i] = 0;
+            //Build frequency list
+            for(let i = 0; i < total; i++) {
+                freq[img[i * 4]] += 1;
+            }
+            let mapping = new Array(256);
+            let sum = 0;
+            for (let i = 0; i < 256; i++) {
+                sum += freq[i];
+                //cdf is sum/total
+                mapping[i] = Math.round((sum / total) * 255);
+            }
+            for(let i = 0; i < total; i++) {
+                img[i * 4 + 0] = mapping[img[i * 4 + 0]];
+                img[i * 4 + 1] = mapping[img[i * 4 + 1]];
+                img[i * 4 + 2] = mapping[img[i * 4 + 2]];
+            }
+        })
+    },
+
+    other: {
+        gammaCorrect: new ProcessFunction("Gamma Correction", 1, function(img, width, height, gamma) {
+            const total = width * height;
+            for(let i = 0; i < total; i++) {
+                img[i * 4 + 0] = 255 * (img[i * 4 + 0]/255)**gamma;
+                img[i * 4 + 1] = 255 * (img[i * 4 + 1]/255)**gamma;
+                img[i * 4 + 2] = 255 * (img[i * 4 + 2]/255)**gamma;
+            }
+        })
+    }
 };
-
 
 document.addEventListener("DOMContentLoaded", () => {
     asciiWebcam.load();
+    processing.load();
 });
