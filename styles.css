@@ -1,5 +1,6 @@
 #render {
-    font: 6px Consolas;
+    font-size: 6px;
+    font-family: Consolas, monospace;
     background-color: black;
     color: white;
     text-align: center;
