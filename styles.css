@@ -31,6 +31,11 @@
 .option {
     font-family: sans-serif;
     padding: 3px;
+    transition-duration: 0.4s;
+}
+
+.option:hover:not(.enabled) {
+    background-color: lightgreen;
 }
 
 .enabled {
@@ -38,4 +43,15 @@
 }
 
 .arg {
+}
+
+button {
+    border: 3px solid gray;
+    border-radius: 5px;
+    padding: 5px;
+    background-color: lightgrey;
+    transition-duration: 0.4s;
+}
+button:hover {
+    background-color: white;
 }

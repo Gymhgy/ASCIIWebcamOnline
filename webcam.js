@@ -148,6 +148,7 @@ let processing = {
                     arg.maxLength = 5;
                     arg.min = "0";
                     arg.max = "1000";
+                    arg.addEventListener("click", e => e.stopPropagation());
                     option.appendChild(arg);
                 }
                 div.appendChild(option);
@@ -178,6 +179,21 @@ let processing = {
                 img[i * 4 + 1] = mapping[img[i * 4 + 1]];
                 img[i * 4 + 2] = mapping[img[i * 4 + 2]];
             }
+        }),
+        histStretch: new ProcessFunction("Histogram Stretching", 0, function(img, width, height) {
+            const total = width * height;
+            let min = 255, max = 0;
+            for(let i = 0; i < total; i++) {
+                if(img[i * 4] < min) min = img[i*4];
+                if(img[i * 4] > max) max = img[i*4];
+            }
+            if(min == max) return;
+            for(let i = 0; i < total; i++) {
+                img[i * 4 + 0] = (img[i * 4 + 0] - min)/(max - min) * 255;
+                img[i * 4 + 1] = (img[i * 4 + 1] - min)/(max - min) * 255;
+                img[i * 4 + 2] = (img[i * 4 + 2] - min)/(max - min) * 255;
+
+            }
         })
     },
 
@@ -197,3 +213,22 @@ document.addEventListener("DOMContentLoaded", () => {
     asciiWebcam.load();
     processing.load();
 });
+
+//Buttons
+function playPause() {
+    const video = document.getElementById("videoFeed");
+    if(video.toggleAttribute("data-paused")) {
+        video.pause();
+    }
+    else {
+        video.play();
+    }
+}
+function copy() {
+    const render = document.getElementById("render");
+    navigator.clipboard.writeText(render.innerText).then(function() {
+        console.log('Async: Copying to clipboard was successful!');
+    }, function(err) {
+        console.error('Async: Could not copy text: ', err);
+    });
+}
