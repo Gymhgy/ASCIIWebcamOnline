@@ -32,7 +32,7 @@ let asciiWebcam = {
 
         getStream().then(stream => {
 
-            videoSelect.selectedIndex = [...videoSelect.options].findIndex(option => option.text === stream.getAudioTracks()[0].label);
+            videoSelect.selectedIndex = [...videoSelect.options].findIndex(option => option.text === stream.getVideoTracks()[0].label);
             let {width, height} = stream.getTracks()[0].getSettings();
             this.width = width;
             this.height = height;
