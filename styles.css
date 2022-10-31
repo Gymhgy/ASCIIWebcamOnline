@@ -4,16 +4,13 @@
     background-color: black;
     color: white;
     text-align: center;
-    display: inline-block
+    line-height: 6px;
+    overflow:hidden;
 }
 .hide{
     display: none;
 }
 
-#container {
-    display: flex;
-    column-gap: 10px;
-}
 
 #processor {
     display: flex;

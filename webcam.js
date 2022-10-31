@@ -5,6 +5,8 @@ const intensities = [0,797,731,1855,2089,1983,2189,323,1205,1390,964,930,503,424
     2466,1522,1240,1760,1544,1208,1758,1325,1457,1809,1802,1048,1438,1269,1324,1187,1578,1357,1631,
     1333,1464,1039,1406,723];
 
+let front = true;
+
 let asciiWebcam = {
 
     timerCallback: function() {
@@ -21,7 +23,7 @@ let asciiWebcam = {
         this.ctx = this.canvas.getContext("2d");
         this.render = document.getElementById("render");
 
-        navigator.mediaDevices.getUserMedia({video: true}).then(stream => {
+        navigator.mediaDevices.getUserMedia({video: true, facingMode: front ? 'user' : 'environment'}).then(stream => {
             let {width, height} = stream.getTracks()[0].getSettings();
             this.width = width;
             this.height = height;
@@ -32,11 +34,9 @@ let asciiWebcam = {
 
             this.canvas.width = width;
             this.canvas.height = height;
-            this.testCanvas = document.createElement("canvas");
+            this.testCanvas = document.getElementById("test");
             this.testCanvas.width = this.width;
             this.testCanvas.height = this.height;
-            this.video.parentElement.appendChild(this.testCanvas);
-
         });
         this.video.addEventListener("play", () => this.timerCallback(), false);
 
@@ -105,7 +105,8 @@ let asciiWebcam = {
             lines.push(line);
         }
         this.render.innerText = lines.join("\n");
-        
+        console.log(lines.length);
+
     }
 };
 
@@ -210,6 +211,7 @@ let processing = {
 };
 
 document.addEventListener("DOMContentLoaded", () => {
+
     asciiWebcam.load();
     processing.load();
 });
@@ -231,4 +233,9 @@ function copy() {
     }, function(err) {
         console.error('Async: Could not copy text: ', err);
     });
+}
+
+function flip() { 
+    front = !front;
+    asciiWebcam.load();
 }
