@@ -6,24 +6,26 @@
 
     </head>
     <body>
-        <script type="text/javascript" src="webcam.js"></script>
         <video class="hide" id="videoFeed" autoplay></video>
         <canvas class="hide" id="frameCapturer"></canvas>
-        <div class="container">
+        <div class="container-lg">
             <h1 class="row">ASCII Webcam</h1>
             <div class="row">
-                <pre id="render" class="col-md-9">
+                <pre id="render" class="col-lg-9 col-12">
 
                 </pre>
     
-                <div id="processor" class="col-md-3">
+                <div id="processor" class="col-lg-3 col-12">
                     <button onclick="playPause()" type="button">Pause/Play</button>
                     <button onclick="copy()" type="button">Copy</button>
-                    <button onclick="flip()" type="button">Flip Camera</button>
+                    <label>Select Video Source (Camera)</label>
+                    <select id="videos" class="form-select" onchange="asciiWebcam.load()"></select>
                 </div>
             </div>
             <canvas id="test" class="row"></div>
 
         </div>
+        <script type="text/javascript" src="webcam.js"></script>
+
     </body>
 </html>

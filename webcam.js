@@ -5,7 +5,14 @@ const intensities = [0,797,731,1855,2089,1983,2189,323,1205,1390,964,930,503,424
     2466,1522,1240,1760,1544,1208,1758,1325,1457,1809,1802,1048,1438,1269,1324,1187,1578,1357,1631,
     1333,1464,1039,1406,723];
 
-let front = true;
+let videoSelect = document.getElementById("videos");
+function getStream() {
+    return navigator.mediaDevices.getUserMedia({
+        video: {
+            deviceId: videoSelect.value ? {exact: videoSelect.value} : ''
+        }
+    })
+}
 
 let asciiWebcam = {
 
@@ -20,10 +27,12 @@ let asciiWebcam = {
     load: function() {
         this.video = document.getElementById("videoFeed");
         this.canvas = document.getElementById("frameCapturer");
-        this.ctx = this.canvas.getContext("2d");
+        this.ctx = this.canvas.getContext("2d", { willReadFrequently: true });
         this.render = document.getElementById("render");
 
-        navigator.mediaDevices.getUserMedia({video: true, facingMode: front ? 'user' : 'environment'}).then(stream => {
+        getStream().then(stream => {
+
+            videoSelect.selectedIndex = [...videoSelect.options].findIndex(option => option.text === stream.getAudioTracks()[0].label);
             let {width, height} = stream.getTracks()[0].getSettings();
             this.width = width;
             this.height = height;
@@ -37,6 +46,22 @@ let asciiWebcam = {
             this.testCanvas = document.getElementById("test");
             this.testCanvas.width = this.width;
             this.testCanvas.height = this.height;
+
+            navigator.mediaDevices.enumerateDevices().then(devices => {
+                devices.forEach(device => {
+                    if(device.kind == "videoinput") {
+                        let option = new Option();
+                        option.value = device.deviceId;
+                        option.text = device.label || `Camera ${videoSelect.length + 1}`;
+                        videoSelect.appendChild(option);
+                    }
+                });
+            }).catch(function (e) {
+                console.log(e.name + ": " + e.message);
+            });
+
+        }).catch(function (e) {
+            console.log(e.name + ": " + e.message);
         });
         this.video.addEventListener("play", () => this.timerCallback(), false);
 
@@ -105,7 +130,6 @@ let asciiWebcam = {
             lines.push(line);
         }
         this.render.innerText = lines.join("\n");
-        console.log(lines.length);
 
     }
 };
