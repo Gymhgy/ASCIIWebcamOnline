@@ -31,8 +31,7 @@ let asciiWebcam = {
         this.render = document.getElementById("render");
 
         getStream().then(stream => {
-
-            videoSelect.selectedIndex = [...videoSelect.options].findIndex(option => option.text === stream.getVideoTracks()[0].label);
+            videoSelect.length = 0;
             let {width, height} = stream.getTracks()[0].getSettings();
             this.width = width;
             this.height = height;
@@ -47,6 +46,7 @@ let asciiWebcam = {
             this.testCanvas.width = this.width;
             this.testCanvas.height = this.height;
 
+            videoSelect.length = 0;
             navigator.mediaDevices.enumerateDevices().then(devices => {
                 devices.forEach(device => {
                     if(device.kind == "videoinput") {
@@ -59,6 +59,7 @@ let asciiWebcam = {
             }).catch(function (e) {
                 console.log(e.name + ": " + e.message);
             });
+            videoSelect.selectedIndex = [...videoSelect.options].findIndex(option => option.text === stream.getVideoTracks()[0].label);
 
         }).catch(function (e) {
             console.log(e.name + ": " + e.message);
