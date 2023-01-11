@@ -5,35 +5,18 @@ const intensities = [0,797,731,1855,2089,1983,2189,323,1205,1390,964,930,503,424
     2466,1522,1240,1760,1544,1208,1758,1325,1457,1809,1802,1048,1438,1269,1324,1187,1578,1357,1631,
     1333,1464,1039,1406,723];
 
-let videoSelect = document.getElementById("videos");
-function getStream() {
-    return navigator.mediaDevices.getUserMedia({
-        video: {
-            deviceId: videoSelect.value ? {exact: videoSelect.value} : ''
-        }
-    })
-}
-
 let asciiWebcam = {
 
-    timerCallback: function() {
-        if (this.video.paused || this.video.ended) {
-            return;
-        }
-        this.computeFrame();
-        setTimeout(() => this.timerCallback(), 0);
-    },
-
     load: function() {
-        this.video = document.getElementById("videoFeed");
+        this.source = document.getElementById("source");
         this.canvas = document.getElementById("frameCapturer");
         this.ctx = this.canvas.getContext("2d", { willReadFrequently: true });
         this.render = document.getElementById("render");
 
-        this.video.crossOrigin = "Anonymous";
+        this.source.crossOrigin = "Anonymous";
 
-        let width = this.video.width;
-        let height = this.video.height;
+        let width = this.source.width;
+        let height = this.source.height;
         this.width = width;
         this.height = height;
 
@@ -43,15 +26,14 @@ let asciiWebcam = {
         this.testCanvas.width = this.width;
         this.testCanvas.height = this.height;
 
-        this.timerCallback();
-
+        this.computeFrame();
 
     },
 
     computeFrame: function() {
         this.ctx.filter = "grayscale(100%)";
 
-        this.ctx.drawImage(this.video, 0, 0, this.width, this.height);
+        this.ctx.drawImage(this.source, 0, 0, this.width, this.height);
         let frame = this.ctx.getImageData(0, 0, this.width, this.height);
 
 
@@ -138,6 +120,7 @@ let processing = {
                 option.classList.add("option");
                 option.addEventListener("click", () => {
                     option.classList.toggle("enabled");
+                    asciiWebcam.computeFrame();
                 });
                 const label = document.createElement("label");
                 label.innerText = funcGroup[func].name;
@@ -154,6 +137,7 @@ let processing = {
                     arg.min = "0";
                     arg.max = "1000";
                     arg.addEventListener("click", e => e.stopPropagation());
+                    arg.addEventListener("oninput", () => {asciiWebcam.computeFrame();console.log(2);});
                     option.appendChild(arg);
                 }
                 div.appendChild(option);
@@ -210,26 +194,37 @@ let processing = {
                 img[i * 4 + 1] = 255 * (img[i * 4 + 1]/255)**gamma;
                 img[i * 4 + 2] = 255 * (img[i * 4 + 2]/255)**gamma;
             }
+        }),
+        contrast: new ProcessFunction("Contrast (-255 - 255)", 1, function(img, width, height, contrast) {
+            const total = width * height;
+            const factor = (259 * (contrast + 255)) / (255 * (259 - contrast));
+            for(let i = 0; i < total; i++) {
+                img[i * 4 + 0] = factor * (img[i * 4 + 0] - 128) + 128;
+                img[i * 4 + 1] = factor * (img[i * 4 + 1] - 128) + 128;
+                img[i * 4 + 2] = factor * (img[i * 4 + 2] - 128) + 128;
+            }
         })
     }
 };
 
 document.addEventListener("DOMContentLoaded", () => {
-
-    asciiWebcam.load();
     processing.load();
 });
+var filename = "";
+window.addEventListener('load', function() {
+    document.getElementById("selector").addEventListener('change', function() {
+        if(this.files && this.files[0]) {
+            var img = document.getElementById('source');
+            filename = this.files[0].name;
+            img.onload = () => {
+                asciiWebcam.load();
+                URL.revokeObjectURL(img.src);
+            }
+            img.src = URL.createObjectURL(this.files[0]);
+        }
+    });
+});
 
-//Buttons
-function playPause() {
-    const video = document.getElementById("videoFeed");
-    if(video.toggleAttribute("data-paused")) {
-        video.pause();
-    }
-    else {
-        video.play();
-    }
-}
 function copy() {
     const render = document.getElementById("render");
     navigator.clipboard.writeText(render.innerText).then(function() {
@@ -237,6 +232,65 @@ function copy() {
     }, function(err) {
         console.error('Async: Could not copy text: ', err);
     });
+}
+
+function save() {
+    var css = `font-size: 6px; font-family: Consolas, monospace; background-color: black; color: white; justify-content: center; display: flex; line-height: 6px;`
+    var code = document.getElementById("render");
+    var height = code.scrollHeight;
+    var width = Math.round( code.scrollWidth * 1 );
+    var data =  `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">` +
+                '<foreignObject width="100%" height="100%">' +
+                    `<pre xmlns="http://www.w3.org/1999/xhtml" style="${css}">` +
+                        code.innerHTML.replaceAll("<br>","<br></br>") + 
+                    '</pre>' +
+                '</foreignObject>' +
+                '</svg>';
+    var DOMURL = window.URL || window.webkitURL || window;
+    var svg = new Blob([data], {type: 'image/svg+xml;charset=utf-8'});
+    var url = DOMURL.createObjectURL(svg);
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    document.body.appendChild(canvas);
+    const ctx = canvas.getContext('2d');
+    var img = new Image();    document.body.appendChild(img);
+
+    img.onload = function() {
+        ctx.drawImage(img, 0, 0);
+    }
+    img.setAttribute('crossorigin', 'anonymous');
+
+    img.src = url;
+
+    const link = document.createElement("a");
+    link.href = canvas.toDataURL();
+    link.download = "ASCII - " + filename.replace(/\.[^/.]+$/, "") + ".png";
+    link.click();
+}
+
+function save2() {
+    const canvas = document.createElement("canvas");
+    const code =  document.getElementById("render");
+    const lines = code.innerText.split('\n');
+
+    const ctx = canvas.getContext('2d', {alpha: false});
+    ctx.fillStyle = "black";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    var height = code.scrollHeight;
+    var width = Math.round( code.scrollWidth * 1 );
+
+    canvas.width = width;
+    canvas.height = height;
+    const lineheight = 6;
+    document.body.appendChild(canvas);
+
+    ctx.fillStyle = 'white';
+    ctx.font = '6px Consolas';
+    for (var i = 0; i<lines.length; i++)
+        ctx.fillText(lines[i], 0, 6 + (i*lineheight));
+
 }
 
 function flip() { 

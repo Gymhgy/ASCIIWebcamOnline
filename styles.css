@@ -3,9 +3,10 @@
     font-family: Consolas, monospace;
     background-color: black;
     color: white;
-    text-align: center;
+    display: inline-block;
+    text-align: left;
+    margin: 0;
     line-height: 6px;
-    overflow:hidden;
 }
 .hide{
     display: none;

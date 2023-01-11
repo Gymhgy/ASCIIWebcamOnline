@@ -6,26 +6,24 @@
 
     </head>
     <body>
-        <img id="videoFeed" class="img-fluid"src="dome2.jpg"></img>
-        <pre id="render">
+        <img id="source" class="img-fluid" hidden crossorigin="anonymous"></img>
 
-        <canvas class="hide" id="frameCapturer"></canvas>
-        <div class="container-lg">
+        <div class="container-lg mb-2">
             <h1 class="row">ASCII Webcam</h1>
             <div class="row">
-
-                </pre>
-    
                 <div id="processor" class="col-lg-3 col-12">
-                    <button onclick="playPause()" type="button">Pause/Play</button>
                     <button onclick="copy()" type="button">Copy</button>
-                    <label>Select Video Source (Camera)</label>
-                    <select id="videos" class="form-select" onchange="asciiWebcam.load()"></select>
+                    <button onclick="save2()" type="button">Save</button>
+                    <input type='file' id="selector" accept="image/*"/>
                 </div>
+                <canvas id="frameCapturer" class="col-lg-4 col-6"></canvas>
+                <canvas id="test" class="col-lg-4 col-6"></div>
             </div>
-            <canvas id="test" class="row"></div>
-
         </div>
+        <div style="text-align: center; background-color: black;">
+        <pre id="render">
+        </pre></div>
+
         <script type="text/javascript" src="webcam2.js"></script>
 
     </body>
